@@ -14,11 +14,11 @@ public class SampleUsers {
     private static final String password2 = "1";
     private static final String password3 = "2";
 
-    public static List<UserEntity> getUsers(){
+    public static ArrayList<UserEntity> getUsers(){
         ArrayList<UserEntity> users = new ArrayList<>();
-        users.add(new UserEntity(username1,password1));
-        users.add(new UserEntity(username2,password2));
-        users.add(new UserEntity(username3,password3));
+        users.add(new UserEntity(1,username1,password1));
+        users.add(new UserEntity(2,username2,password2));
+        users.add(new UserEntity(3,username3,password3));
         return users;
     }
 

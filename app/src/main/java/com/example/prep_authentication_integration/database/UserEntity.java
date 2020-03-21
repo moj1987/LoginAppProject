@@ -9,6 +9,7 @@ public class UserEntity {
 
     @PrimaryKey(autoGenerate = true)
     private int id;
+
     private String userName;
     private String password;
 
