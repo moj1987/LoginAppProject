@@ -1,33 +1,43 @@
 package com.example.prep_authentication_integration;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.prep_authentication_integration.database.UserDatabase;
 import com.example.prep_authentication_integration.database.UserEntity;
-import com.example.prep_authentication_integration.utilities.SampleUsers;
 
-import java.util.ArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-
+/**
+ * MainActivity for the sample app.
+ */
 public class MainActivity extends AppCompatActivity {
 
-    ArrayList<UserEntity> mUsers = new ArrayList<>();
+    /**
+     * EditText for the username field.
+     */
     EditText usernameInput;
+
+    /**
+     * EditText for the password field.
+     */
     EditText passwordInput;
-    TextView textView;
+
+    /**
+     * Instance of database for reading and writing.
+     */
     private UserDatabase mDb;
+
+    /**
+     * An executor to run the database operations on a separate thread.
+     */
     private Executor executor = Executors.newSingleThreadExecutor();
-    final String TAG = this.getClass().getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,23 +46,31 @@ public class MainActivity extends AppCompatActivity {
 
         usernameInput = findViewById(R.id.user_name_text);
         passwordInput = findViewById(R.id.password_Text);
-        textView = findViewById(R.id.textView);
 
-        Button logInButton = findViewById(R.id.log_in);
-        logInButton.setOnClickListener(v -> loginButtonClicked());
-
-        Button createAccountButton = findViewById(R.id.creat_account);
-        createAccountButton.setOnClickListener(v -> createAccountButtonClicked());
-
-        addSampleUsers();
-//        showUsers();
+        configureListeners();
     }
 
-    private void createAccountButtonClicked() {
+    /**
+     * All the listeners are configured here.
+     */
+    private void configureListeners() {
+        // Configure login button listener
+        Button logInButton = findViewById(R.id.log_in);
+        logInButton.setOnClickListener(v -> attemptLogin());
+
+        // Configure create account button listener
+        Button createAccountButton = findViewById(R.id.creat_account);
+        createAccountButton.setOnClickListener(v -> createAccount());
+    }
+
+    /**
+     * Create an account for the given username and password entered. For simplicity no check is performed when creating
+     * an account. After creating the account the fields are cleared to be ready for other actions.
+     */
+    private void createAccount() {
         String username = usernameInput.getText().toString();
         String password = passwordInput.getText().toString();
-        UserEntity user = new UserEntity(username,password);
-        Log.i(TAG, "checking information for username: " + username + ", and password: " + password);
+        UserEntity user = new UserEntity(username, password);
 
         executor.execute((() -> {
             mDb.userDAO().insertUser(user);
@@ -61,33 +79,14 @@ public class MainActivity extends AppCompatActivity {
                 usernameInput.setText("");
                 passwordInput.setText("");
             });
-
         }));
-
     }
 
     /**
-     * Add a few sample users for testing purposes.
+     * Attempt to login with the given username and password.
      */
-    private void addSampleUsers() {
-        executor.execute(() -> {
-            mDb = UserDatabase.getInstance(getApplicationContext());
-            mDb.userDAO().insertAll(SampleUsers.getUsers());
-        });
-    }
-
-    private void showUsers() {
-        executor.execute(() -> {
-            ArrayList<UserEntity> users = (ArrayList<UserEntity>) mDb.userDAO().getAllUsers();
-            runOnUiThread(() -> textView.setText(users.toString()));
-        });
-    }
-
-    public void loginButtonClicked() {
-
+    public void attemptLogin() {
         String username = usernameInput.getText().toString();
-        String password = passwordInput.getText().toString();
-        Log.i(TAG, "checking information for username: " + username + ", and password: " + password);
 
         executor.execute((() -> {
             UserEntity user = mDb.userDAO().getUserByUserName(username);
@@ -95,13 +94,18 @@ public class MainActivity extends AppCompatActivity {
         }));
     }
 
+    /**
+     * Check if a user was retrieved from the database and if the entered password matched the user's password from
+     * the database. For simplicity, this functions show a toast message for different scenarios.
+     *
+     * @param user The user to check.
+     */
     public void validateUser(UserEntity user) {
-
         if (user == null) {
             Toast.makeText(this, "User not found", Toast.LENGTH_SHORT).show();
             return;
         }
-        Log.i(TAG, "user found, password should be: " + user.getPassword());
+
         String password = passwordInput.getText().toString();
         if (!password.equals(user.getPassword())) {
             Toast.makeText(MainActivity.this, "Password is incorrect", Toast.LENGTH_LONG).show();
@@ -110,14 +114,6 @@ public class MainActivity extends AppCompatActivity {
 
         Intent intent = new Intent(this, MapsActivity.class);
         startActivity(intent);
-    }
-
-    private boolean checkPasswordValidity() {
-
-        if (usernameInput.getText().toString().equals("a")) {
-            return true;
-        }
-        return false;
     }
 
 }
